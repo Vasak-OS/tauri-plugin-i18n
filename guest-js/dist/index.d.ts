@@ -18,6 +18,17 @@ export default class I18n {
     static getInstance(): I18n;
     /** Load translations and setup listener */
     load(): Promise<void>;
+    /**
+  * **translate**
+  *
+  * Gets the current translation using key
+  * @returns string
+  *
+  * @example
+  * ```ts
+  *  i18n.translate(key);
+  * ```
+  */
     translate(key: string): string;
     /** Bind a single element to a key */
     bind(el: HTMLElement, key: string): void;

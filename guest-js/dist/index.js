@@ -36,6 +36,17 @@ export default class I18n {
         // Watch for dynamically added elements
         this.observeDOM();
     }
+    /**
+  * **translate**
+  *
+  * Gets the current translation using key
+  * @returns string
+  *
+  * @example
+  * ```ts
+  *  i18n.translate(key);
+  * ```
+  */
     translate(key) {
         if (!this.translations || !this.translations[this.locale]) {
             return key; // Return key as fallback
