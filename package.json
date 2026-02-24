@@ -1,8 +1,9 @@
 {
-  "name": "tauri-plugin-i18n-api",
+  "name": "@vasakgroup/tauri-plugin-i18n",
   "version": "1.0.0",
   "authors": [
-    "Rohit Singh <razein@wizql.com>"
+    "Rohit Singh <razein@wizql.com>",
+    "Joaquin (Pato) Decima <jdecima@vasak.net.ar>"
   ],
   "description": "Tauri internationalization using rust_i18n",
   "type": "module",
@@ -19,17 +20,17 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c",
-    "prepublishOnly": "pnpm build",
-    "pretest": "pnpm build"
+    "build": "bunx --bun rollup -c",
+    "prepublishOnly": "bunx --bun build",
+    "pretest": "bunx --bun build"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.0.0"
+    "@tauri-apps/api": "^2.10.1"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^12.0.0",
-    "rollup": "^4.9.6",
-    "typescript": "^5.3.3",
-    "tslib": "^2.6.2"
+    "@rollup/plugin-typescript": "^12.3.0",
+    "rollup": "^4.59.0",
+    "typescript": "^5.9.3",
+    "tslib": "^2.8.1"
   }
 }
