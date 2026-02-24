@@ -6,7 +6,7 @@ description = "Internationalization plugin using rust_i18n for tauri apps."
 edition = "2021"
 rust-version = "1.77.2"
 repository = "https://github.com/VasakOS/tauri-plugin-i18n"
-license = "GNU General Public License v3.0"
+license = "GPL-3.0-only"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-i18n"
 
