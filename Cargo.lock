@@ -3369,7 +3369,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-i18n"
+name = "tauri-plugin-i18n-vsk"
 version = "2.0.2"
 dependencies = [
  "globwalk",
