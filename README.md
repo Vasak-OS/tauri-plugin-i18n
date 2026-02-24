@@ -1,5 +1,7 @@
 # Tauri Plugin i18n (A simple wrapper around rust_i18n)
 
+this project is a one fork of [tauri-plugin-i18n](https://github.com/razein97/tauri-plugin-i18n)
+
 > This plugin does not support macros from rust_i18n.
 
 > rust_i18n is only used for parsing the locales.
@@ -43,14 +45,17 @@ You can install the JavaScript Guest bindings using your preferred JavaScript pa
 Install the JavaScript bindings using your preferred package manager:
 
 ```bash
+# Using bun 
+bun add @vasakgroup/tauri-plugin-i18n
+
 # Using pnpm
-pnpm add @razein97/tauri-plugin-i18n
+pnpm add @vasakgroup/tauri-plugin-i18n
 
 # Using npm
-npm install @razein97/tauri-plugin-i18n
+npm install @vasakgroup/tauri-plugin-i18n
 
 # Using yarn
-yarn add @razein97/tauri-plugin-i18n
+yarn add @vasakgroup/tauri-plugin-i18n
 ```
 
 ## Locale file [rust_i18n implementation]
@@ -165,7 +170,7 @@ Afterwards all the plugin's APIs are available through the JavaScript guest bind
 #### JS
 
 ```javascript
-import I18n from '@razein97/tauri-plugin-i18n';
+import I18n from '@vasakgroup/tauri-plugin-i18n';
 
 // Load translations
 await I18n.getInstance().load();
@@ -192,7 +197,7 @@ fn get_locales(app: tauri::AppHandle)-> Vec<String> {
 #### JS
 
 ```javascript
-import I18n from '@razein97/tauri-plugin-i18n';
+import I18n from '@vasakgroup/tauri-plugin-i18n';
 
 // Example
 // Set the locale
@@ -219,7 +224,7 @@ fn update_locale(app: tauri::AppHandle, locale: &str) {
 ```javascript
 // In javascript, it uses the [data-i18n] attribute to remain framework agnostic
 
-import I18n from '@razein97/tauri-plugin-i18n';
+import I18n from '@vasakgroup/tauri-plugin-i18n';
 
 // Load translations
 await I18n.getInstance().load();
