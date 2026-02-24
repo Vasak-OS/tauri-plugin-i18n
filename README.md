@@ -27,8 +27,8 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 ```toml
 # Point this to your fork's repository and branch/tag/rev
 # Example using a GitHub repo:
-[dependencies.tauri-plugin-i18n]
-git = "https://github.com/razein97/tauri-plugin-i18n"
+[dependencies.tauri-plugin-i18n-vsk]
+git = "https://github.com/VasakOS/tauri-plugin-i18n"
 
 # Or use a local path if developing locally:
 # path = "../path/to/your/fork/tauri-plugin-i18n"
@@ -37,7 +37,7 @@ git = "https://github.com/razein97/tauri-plugin-i18n"
 The package can also be installed by using cargo:
 
 ```sh
-cargo add tauri-plugin-i18n
+cargo add tauri-plugin-i18n-vsk
 ```
 
 You can install the JavaScript Guest bindings using your preferred JavaScript package manager:
