@@ -1,11 +1,11 @@
 [package]
 name = "tauri-plugin-i18n"
 version = "2.0.2"
-authors = ["Rohit Singh <razein@wizql.com>"]
+authors = ["Rohit Singh <razein@wizql.com>", "Joaquin (Pato) Decima <jdecima@vasak.net.ar>"]
 description = "Internationalization plugin using rust_i18n for tauri apps."
 edition = "2021"
 rust-version = "1.77.2"
-repository = "https://github.com/razein97/tauri-plugin-i18n"
+repository = "https://github.com/VasakOS/tauri-plugin-i18n"
 license = "MIT OR Apache-2.0"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-i18n"

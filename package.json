@@ -1,6 +1,6 @@
 {
   "name": "@vasakgroup/tauri-plugin-i18n",
-  "version": "1.0.0",
+  "version": "2.0.2",
   "authors": [
     "Rohit Singh <razein@wizql.com>",
     "Joaquin (Pato) Decima <jdecima@vasak.net.ar>"
@@ -21,8 +21,8 @@
   ],
   "scripts": {
     "build": "bunx --bun rollup -c",
-    "prepublishOnly": "bunx --bun build",
-    "pretest": "bunx --bun build"
+    "prepublishOnly": "bun run build",
+    "pretest": "bun run build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1"
@@ -32,5 +32,8 @@
     "rollup": "^4.59.0",
     "typescript": "^5.9.3",
     "tslib": "^2.8.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
