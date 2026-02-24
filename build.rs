@@ -41,15 +41,48 @@ fn generate_empty_bundled_locales() {
 
 fn find_workspace_root(start_dir: &Path) -> Option<PathBuf> {
     let mut current = start_dir;
-
-    // Walk up the directory tree looking for src-tauri
     while let Some(parent) = current.parent() {
-        let src_tauri = parent.join("src-tauri");
-        if src_tauri.exists() && src_tauri.is_dir() {
-            println!("cargo:info=Found workspace root: {}", parent.display());
-            return Some(parent.to_path_buf());
+        // Check if this dir contains a Cargo.toml with [workspace]
+        let cargo_toml = parent.join("Cargo.toml");
+        if cargo_toml.exists() {
+            if let Ok(contents) = fs::read_to_string(&cargo_toml) {
+                if contents.contains("[workspace]") {
+                    // Now search recursively for src-tauri under this workspace root
+                    if let Some(src_tauri_parent) = find_src_tauri(parent) {
+                        println!(
+                            "cargo:info=Found src-tauri parent: {}",
+                            src_tauri_parent.display()
+                        );
+                        return Some(src_tauri_parent);
+                    }
+                }
+            }
         }
         current = parent;
+    }
+    None
+}
+
+fn find_src_tauri(root: &Path) -> Option<PathBuf> {
+    // BFS/DFS to find a `src-tauri` directory anywhere under root
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let src_tauri = dir.join("src-tauri");
+        if src_tauri.exists() && src_tauri.is_dir() {
+            return Some(dir);
+        }
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    // Skip hidden dirs, target, node_modules
+                    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if !name.starts_with('.') && name != "target" && name != "node_modules" {
+                        stack.push(path);
+                    }
+                }
+            }
+        }
     }
     None
 }
