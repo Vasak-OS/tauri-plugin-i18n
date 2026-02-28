@@ -25,6 +25,7 @@ export default {
   ],
   external: [
     /^@tauri-apps\/api/,
+    'vue', // Mark Vue as external (peer dependency)
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.peerDependencies || {})
   ]
