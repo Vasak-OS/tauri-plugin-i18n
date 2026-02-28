@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-i18n-vsk"
-version = "2.1.0"
+version = "2.1.1"
 authors = ["Rohit Singh <razein@wizql.com>", "Joaquin (Pato) Decima <jdecima@vasak.net.ar>"]
 description = "Internationalization plugin using rust_i18n for tauri apps."
 edition = "2021"
