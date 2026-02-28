@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
 
-
 type TranslationMap = Record<string, Record<string, string>>;
 
 
@@ -13,16 +12,10 @@ type TranslationMap = Record<string, Record<string, string>>;
  * Default locale is en
  */
 export default class I18n {
-  private static _instance: I18n;
   private translations: TranslationMap | null = null;
   private locale = "en";
-  private elements = new Map<HTMLElement, string>();
-  private observer: MutationObserver | null = null;
+  private readonly elements = new Map<HTMLElement, string>();
   private unlistenFns: UnlistenFn[] = [];
-  private bindings: Record<string, HTMLElement[]> = {};
-
-
-
 
   private static instance: I18n;
 
@@ -39,32 +32,15 @@ export default class I18n {
     this.translations = await invoke<Record<string, Record<string, string>> | null>('plugin:i18n|load_translations');
     this.locale = await invoke<string>('plugin:i18n|get_locale');
 
-    // Bind existing elements
-    this.autoBind();
-
     const unlisten = await listen<string>('i18n:locale_changed', (event) => {
-      console.log(event.payload)
       this.locale = event.payload;
       this.updateAll();
     })
 
     this.unlistenFns.push(unlisten)
-
-    // Watch for dynamically added elements
-    this.observeDOM();
   }
 
-  /**
-* **translate**
-* 
-* Gets the current translation using key
-* @returns string
-* 
-* @example
-* ```ts
-*  i18n.translate(key);
-* ```
-*/
+
   translate(key: string): string {
     if (!this.translations || !this.translations[this.locale]) {
       return key; // Return key as fallback
@@ -79,46 +55,7 @@ export default class I18n {
     el.textContent = this.translate(key);
   }
 
-  /** Find and bind all elements with [data-i18n] */
-  autoBind() {
-    const elements = document.querySelectorAll('[data-i18n]');
-    elements.forEach((el) => {
-      const key = el.getAttribute('data-i18n');
-      if (key) this.bind(el as HTMLElement, key);
-    });
-  }
-
-  /** Observe DOM for new [data-i18n] elements */
-  private observeDOM() {
-    if (this.observer) return; // already observing
-
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof HTMLElement) {
-            if (node.hasAttribute('data-i18n')) {
-              const key = node.getAttribute('data-i18n');
-              if (key) this.bind(node, key);
-            }
-
-            // Also check children of added node
-            node.querySelectorAll?.('[data-i18n]')?.forEach((child) => {
-              const key = child.getAttribute('data-i18n');
-              if (key) this.bind(child as HTMLElement, key);
-            });
-          }
-        });
-      }
-    });
-
-    this.observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  }
-
   /** Internal: updates all bound elements */
-
   private updateAll() {
     for (const [el, key] of this.elements.entries()) {
       el.textContent = this.translate(key);
@@ -142,7 +79,6 @@ export default class I18n {
     })
   }
 
-
   /**
    * **getLocale**
    * 
@@ -158,8 +94,6 @@ export default class I18n {
     const locale = await invoke<string>('plugin:i18n|get_locale');
     return locale;
   }
-
-
 
   /**
    * **getAvailableLocale**
@@ -177,8 +111,6 @@ export default class I18n {
     return locale;
   }
 
-
-
   // Clean up when done
   destroy() {
     this.unlistenFns.forEach(unlisten => unlisten());
@@ -187,3 +119,6 @@ export default class I18n {
 
 }
 
+// Export Vue 3 composable from separate file
+// (requires Vue as peer dependency)
+export { useI18n } from './composable';
