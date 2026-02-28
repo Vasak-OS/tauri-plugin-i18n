@@ -37,26 +37,37 @@ pub fn init_with_path<R: Runtime>(locale: Option<String>, locales_path: Option<S
             
             // Try to find locales directory
             let found_locales_path = locales_path.clone().or_else(|| {
-                // Get app directory
-                if let Some(app_dir) = app.path().app_config_dir().ok() {
-                    // In dev mode try ../../src-tauri/locales (from target/debug/...)
-                    // In release mode try ../locales
-                    let potential_paths = vec![
-                        app_dir.join("../../src-tauri/locales"),
-                        app_dir.join("../../../src-tauri/locales"),
-                        app_dir.join("../locales"),
-                        app_dir.join("locales"),
-                    ];
-                    
-                    for path in potential_paths {
-                        if path.exists() && path.is_dir() {
-                            println!("[i18n] Found locales at: {}", path.display());
-                            return Some(path.to_string_lossy().to_string());
-                        }
+                let mut potential_paths = vec![];
+                
+                // Strategy 1: Try from current executable path (for packaged apps)
+                if let Ok(exe_path) = std::env::current_exe() {
+                    if let Some(exe_dir) = exe_path.parent() {
+                        // From target/debug/ or release builds
+                        potential_paths.push(exe_dir.join("../locales"));
+                        potential_paths.push(exe_dir.join("../../locales"));
+                        // From bundled apps
+                        potential_paths.push(exe_dir.join("../../../../Bundle/Resources/locales"));
                     }
                 }
                 
-                println!("[i18n] Warning: Could not find locales directory, using empty translations");
+                // Strategy 2: From working directory (dev mode)
+                if let Ok(cwd) = std::env::current_dir() {
+                    potential_paths.push(cwd.join("locales"));
+                    potential_paths.push(cwd.join("src-tauri/locales"));
+                }
+                
+                // Log all potential paths
+                eprintln!("[i18n] Searching for locales in {} potential paths:", potential_paths.len());
+                for (i, path) in potential_paths.iter().enumerate() {
+                    let exists = path.exists();
+                }
+                
+                for path in potential_paths {
+                    if path.exists() && path.is_dir() {
+                        return Some(path.to_string_lossy().to_string());
+                    }
+                }
+                
                 None
             });
 
