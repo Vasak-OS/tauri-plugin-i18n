@@ -13,10 +13,11 @@ pub struct PluginI18n<R: Runtime> {
 
 impl<R: Runtime> PluginI18n<R> {
     ///
-    /// Initialize the data using the locale
+    /// Initialize the data using the locale and optional locales path
     ///
-    pub fn new(app: tauri::AppHandle<R>, locale: String) -> Self {
-        let data = load_data(None);
+    pub fn new(app: tauri::AppHandle<R>, locale: String, locales_path: Option<String>) -> Self {
+        // Load data from runtime path if provided, otherwise use bundled data
+        let data = load_data(locales_path.as_deref());
         Self {
             app,
             data,

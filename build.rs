@@ -12,144 +12,21 @@ const COMMANDS: &[&str] = &[
 ];
 
 fn main() {
-    // Only bundle locales if we can find them (i.e., when used as dependency)
-    // Skip during `cargo publish` or standalone builds
-    if should_bundle_locales() {
-        bundle_locales();
-    } else {
-        // Generate empty bundled_locales.rs for standalone builds
-        generate_empty_bundled_locales();
-    }
+    // Generate empty bundled_locales.rs by default
+    // Projects using this plugin should generate their own bundled_locales.rs
+    // and copy it to the OUT_DIR before compilation
+    generate_empty_bundled_locales();
     tauri_plugin::Builder::new(COMMANDS).build();
-}
-
-fn should_bundle_locales() -> bool {
-    let out_dir = env::var("OUT_DIR").unwrap();
-    find_workspace_root(Path::new(&out_dir)).is_some()
 }
 
 fn generate_empty_bundled_locales() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join("bundled_locales.rs");
 
-    println!("cargo:warning=No locales found - generating empty bundle (this is normal during cargo publish)");
+    println!("cargo:info=Generating default empty bundled_locales.rs");
+    println!("cargo:info=Projects should override this with their own locales via a build.rs script");
 
     let code = "pub fn get_bundled_data() -> Vec<(&'static str, &'static str, &'static str)> {\n    vec![]\n}\n";
-
-    fs::write(dest_path, code).expect("Failed to write bundled_locales.rs");
-}
-
-fn find_workspace_root(start_dir: &Path) -> Option<PathBuf> {
-    let mut current = start_dir;
-    while let Some(parent) = current.parent() {
-        // Check if this dir contains a Cargo.toml with [workspace]
-        let cargo_toml = parent.join("Cargo.toml");
-        if cargo_toml.exists() {
-            if let Ok(contents) = fs::read_to_string(&cargo_toml) {
-                if contents.contains("[workspace]") {
-                    // Now search recursively for src-tauri under this workspace root
-                    if let Some(src_tauri_parent) = find_src_tauri(parent) {
-                        println!(
-                            "cargo:info=Found src-tauri parent: {}",
-                            src_tauri_parent.display()
-                        );
-                        return Some(src_tauri_parent);
-                    }
-                }
-            }
-        }
-        current = parent;
-    }
-    None
-}
-
-fn find_src_tauri(root: &Path) -> Option<PathBuf> {
-    // BFS/DFS to find a `src-tauri` directory anywhere under root
-    let mut stack = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        let src_tauri = dir.join("src-tauri");
-        if src_tauri.exists() && src_tauri.is_dir() {
-            return Some(dir);
-        }
-        if let Ok(entries) = fs::read_dir(&dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.is_dir() {
-                    // Skip hidden dirs, target, node_modules
-                    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                    if !name.starts_with('.') && name != "target" && name != "node_modules" {
-                        stack.push(path);
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
-fn bundle_locales() {
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("bundled_locales.rs");
-
-    println!("cargo:info=OUT_DIR: {}", out_dir);
-
-    // Find workspace root by walking up from OUT_DIR
-    let workspace_root = find_workspace_root(Path::new(&out_dir))
-        .expect("Could not find workspace root (looking for src-tauri directory)");
-
-    let locales_path = workspace_root.join("src-tauri").join("locales");
-
-    println!(
-        "cargo:info=Looking for locales at: {}",
-        locales_path.display()
-    );
-
-    if !locales_path.exists() {
-        panic!(
-            "Locales directory does not exist: {}",
-            locales_path.display()
-        );
-    }
-
-    println!("cargo:rerun-if-changed={}", locales_path.display());
-
-    let mut code = String::from(
-        "pub fn get_bundled_data() -> Vec<(&'static str, &'static str, &'static str)> {\n    vec![\n"
-    );
-
-    match fs::read_dir(&locales_path) {
-        Ok(entries) => {
-            let mut count = 0;
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.is_file() {
-                    if let (Some(stem), Some(ext)) = (
-                        path.file_stem().and_then(|s| s.to_str()),
-                        path.extension().and_then(|s| s.to_str()),
-                    ) {
-                        count += 1;
-                        println!("cargo:info=  Bundling: {}.{}", stem, ext);
-                        code.push_str(&format!(
-                            "        ({:?}, {:?}, include_str!(r#\"{}\"#)),\n",
-                            stem,
-                            ext,
-                            path.display()
-                        ));
-                    }
-                }
-            }
-            println!("cargo:info=Successfully bundled {} locale file(s)", count);
-        }
-        Err(e) => {
-            panic!(
-                "Failed to read locales directory at {}: {}",
-                locales_path.display(),
-                e
-            );
-        }
-    }
-
-    code.push_str("    ]\n}\n");
 
     fs::write(dest_path, code).expect("Failed to write bundled_locales.rs");
 }
