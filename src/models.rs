@@ -4,6 +4,16 @@ use tauri::{AppHandle, Emitter, Manager, Runtime};
 
 use crate::backend::load_data;
 
+/// Toma el candado sin morirse si quedó envenenado.
+///
+/// Un pánico en cualquier parte mientras alguien tiene el candado del idioma lo
+/// envenena. A partir de ahí `set_locale` entraba en pánico y `translate` devolvía
+/// `None` para todo: la aplicación se queda mostrando las claves crudas para
+/// siempre. El idioma es una cadena; recuperarla es mejor que perder los textos.
+fn bloquear<T>(candado: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    candado.lock().unwrap_or_else(|envenenado| envenenado.into_inner())
+}
+
 #[derive(Debug)]
 pub struct PluginI18n<R: Runtime> {
     pub app: AppHandle<R>,
@@ -36,10 +46,10 @@ impl<R: Runtime> PluginI18n<R> {
     /// Gets the translated string according to the current locale
     ///
     pub fn translate(&self, key: &str) -> Option<&str> {
-        let locale = self.locale.lock().ok()?;
+        let locale = bloquear(&self.locale);
 
         self.data
-            .get(&locale.to_string())?
+            .get(locale.as_str())?
             .get(key)
             .map(|k| k.as_str())
     }
@@ -56,8 +66,12 @@ impl<R: Runtime> PluginI18n<R> {
     /// eg: "zh-CN", "en-US"
     ///
     pub fn set_locale(&self, locale: &str) {
-        let mut l = self.locale.lock().unwrap();
-        *l = locale.to_string();
+        {
+            let mut l = bloquear(&self.locale);
+            *l = locale.to_string();
+        }
+        // El aviso va **fuera** del candado: un escucha que vuelva a preguntar el
+        // idioma desde el mismo hilo se quedaría trabado contra sí mismo.
         let _ = self.app.emit("i18n:locale_changed", locale);
     }
 
@@ -67,12 +81,7 @@ impl<R: Runtime> PluginI18n<R> {
     /// Default locale is "en".
     ///
     pub fn get_locale(&self) -> String {
-        let locale = self.locale.lock();
-        if let Ok(l) = locale {
-            l.to_string()
-        } else {
-            "en".to_string()
-        }
+        bloquear(&self.locale).to_string()
     }
 }
 

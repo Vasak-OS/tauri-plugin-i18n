@@ -6,6 +6,7 @@ use tauri::{
 pub use models::*;
 
 mod backend;
+mod discovery;
 mod commands;
 mod error;
 mod models;
@@ -35,40 +36,32 @@ pub fn init_with_path<R: Runtime>(locale: Option<String>, locales_path: Option<S
         .setup(move |app, _api| {
             let default_locale = locale.clone().unwrap_or("en".to_string());
             
-            // Try to find locales directory
+            // Dónde están los catálogos. Ver `discovery`: es la parte que se
+            // rompe callado, porque sin ella la aplicación abre igual y muestra
+            // las claves crudas en lugar de los textos.
             let found_locales_path = locales_path.clone().or_else(|| {
-                let mut potential_paths = vec![];
-                
-                // Strategy 1: Try from current executable path (for packaged apps)
-                if let Ok(exe_path) = std::env::current_exe() {
-                    if let Some(exe_dir) = exe_path.parent() {
-                        // From target/debug/ or release builds
-                        potential_paths.push(exe_dir.join("../locales"));
-                        potential_paths.push(exe_dir.join("../../locales"));
-                        // From bundled apps
-                        potential_paths.push(exe_dir.join("../../../../Bundle/Resources/locales"));
+                let exe = std::env::current_exe().ok();
+                let cwd = std::env::current_dir().ok();
+                let candidatas = discovery::candidate_paths(exe.as_deref(), cwd.as_deref());
+
+                match discovery::first_existing(&candidatas) {
+                    Some(ruta) => Some(ruta.to_string_lossy().to_string()),
+                    None => {
+                        // Se avisa sólo cuando no se encontró, que es el caso en
+                        // que hace falta: los textos van a salir como claves y sin
+                        // esto no hay ninguna pista de por qué.
+                        eprintln!(
+                            "[i18n] no se encontró el directorio de catálogos; se usan los \
+                             empaquetados. Se buscó en: {}",
+                            candidatas
+                                .iter()
+                                .map(|r| r.display().to_string())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        );
+                        None
                     }
                 }
-                
-                // Strategy 2: From working directory (dev mode)
-                if let Ok(cwd) = std::env::current_dir() {
-                    potential_paths.push(cwd.join("locales"));
-                    potential_paths.push(cwd.join("src-tauri/locales"));
-                }
-                
-                // Log all potential paths
-                eprintln!("[i18n] Searching for locales in {} potential paths:", potential_paths.len());
-                for path in potential_paths.iter() {
-                    let _exists = path.exists();
-                }
-                
-                for path in potential_paths {
-                    if path.exists() && path.is_dir() {
-                        return Some(path.to_string_lossy().to_string());
-                    }
-                }
-                
-                None
             });
 
             app.manage(PluginI18n::new(
