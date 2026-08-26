@@ -69,7 +69,7 @@ fn load_locales<F: Fn(&str) -> bool>(
     let path_pattern = format!("{locales_path}/**/*.{{yml,yaml,json,toml}}");
 
     if is_debug() {
-        println!("cargo:i18n-locale={}", &path_pattern);
+        println!("cargo:i18n-locale={}", path_pattern);
     }
 
     // check dir exists
@@ -83,7 +83,7 @@ fn load_locales<F: Fn(&str) -> bool>(
     for entry in globwalk::glob(&path_pattern).expect("Failed to read glob pattern") {
         let entry = entry.unwrap().into_path();
         if is_debug() {
-            println!("cargo:i18n-load={}", &entry.display());
+            println!("cargo:i18n-load={}", entry.display());
         }
 
         if ignore_if(&entry.display().to_string()) {
@@ -93,7 +93,7 @@ fn load_locales<F: Fn(&str) -> bool>(
         let locale = entry
             .file_stem()
             .and_then(|s| s.to_str())
-            .and_then(|s| s.split('.').last())
+            .and_then(|s| s.split('.').next_back())
             .unwrap();
 
         let ext = entry.extension().and_then(|s| s.to_str()).unwrap();
