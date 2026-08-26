@@ -58,8 +58,8 @@ pub fn init_with_path<R: Runtime>(locale: Option<String>, locales_path: Option<S
                 
                 // Log all potential paths
                 eprintln!("[i18n] Searching for locales in {} potential paths:", potential_paths.len());
-                for (i, path) in potential_paths.iter().enumerate() {
-                    let exists = path.exists();
+                for path in potential_paths.iter() {
+                    let _exists = path.exists();
                 }
                 
                 for path in potential_paths {
