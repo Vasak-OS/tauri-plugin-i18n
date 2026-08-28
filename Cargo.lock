@@ -3593,7 +3593,7 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-i18n-vsk"
-version = "2.2.0"
+version = "2.2.1"
 dependencies = [
  "globwalk",
  "normpath",
