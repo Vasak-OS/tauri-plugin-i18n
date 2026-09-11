@@ -1,6 +1,6 @@
 {
   "name": "@vasakgroup/tauri-plugin-i18n",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "authors": [
     "Rohit Singh <razein@wizql.com>",
     "Joaquin (Pato) Decima <jdecima@vasak.net.ar>"
@@ -22,7 +22,8 @@
   "scripts": {
     "build": "bunx --bun rollup -c",
     "prepublishOnly": "bun run build",
-    "pretest": "bun run build"
+    "pretest": "bun run build",
+    "test": "for f in tests/*.test.ts; do bun test \"$f\" || exit 1; done"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1"
