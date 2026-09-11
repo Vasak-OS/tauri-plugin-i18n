@@ -244,6 +244,60 @@ await I18n.getInstance().load();
 
 > See the examples folder for a working app.
 
+---
+
+### Vue: `useI18n()`
+
+The composable reads the **same** state as the `I18n` class — it does not keep a
+copy. Loading through either one fills both, so the recommended startup is to
+load once before mounting and let every component just read:
+
+```javascript
+// main.ts
+import I18n from '@vasakgroup/tauri-plugin-i18n';
+
+// One load for the whole app. Every `useI18n()` below sees it already done.
+await I18n.getInstance().load();
+
+app.mount('#app');
+```
+
+```vue
+<script setup>
+import { useI18n } from '@vasakgroup/tauri-plugin-i18n'
+
+const { t, locale, setLocale, availableLocales, isLoaded, reload } = useI18n()
+</script>
+
+<template>
+  <p>{{ t('views.home.title') }}</p>
+</template>
+```
+
+`load()` is safe to call from anywhere and as often as you like: the first call
+does the work and the rest await that same one. If a component mounts before
+anything loaded, its `onMounted` loads for everyone. Use `reload()` only to
+re-read the catalogs after the files on disk changed.
+
+> Before **2.3.0** the composable kept its own state, so `await
+> I18n.getInstance().load()` before mounting did not give the components
+> anything: the window showed raw keys (`views.home.title`) until each component
+> loaded again on its own. Upgrading fixes that without any change in the app.
+
+#### Watching the state from outside Vue
+
+```javascript
+const i18n = I18n.getInstance();
+
+const unsubscribe = i18n.subscribe(() => {
+  console.log(i18n.currentLocale, i18n.catalogs);
+});
+```
+
+`subscribe()` fires when the catalogs or the locale change and returns the
+function to unsubscribe. `catalogs` and `currentLocale` read the state at any
+moment, which is what lets a late subscriber catch up.
+
 ## Companion package
 
 Use package [rust-i18n-autotranslate](https://crates.io/crates/rust-i18n-autotranslate) to autotranslate locales from a source locale.
