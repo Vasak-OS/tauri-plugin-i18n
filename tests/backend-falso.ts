@@ -18,6 +18,12 @@ export function crearBackend() {
 	const llamadas: Record<string, number> = {};
 	let idioma = 'es';
 	let fallaLaProxima: Error | null = null;
+	/** Lo que tarda `load_translations` en contestar, para encimar dos cargas. */
+	let demoraMs = 0;
+	/** Si está puesto, el próximo `listen` falla con esto. */
+	let fallaElListen: Error | null = null;
+	/** Qué catálogo devolver; se cambia para distinguir una carga de la otra. */
+	let catalogos: Record<string, Record<string, string>> = CATALOGOS;
 	/** Lo que el backend escucha en `i18n:locale_changed`, para dispararlo a mano. */
 	let avisar: ((locale: string) => void) | null = null;
 
@@ -34,7 +40,11 @@ export function crearBackend() {
 					fallaLaProxima = null;
 					throw e;
 				}
-				return CATALOGOS;
+				const esta = catalogos;
+				const espera = demoraMs;
+				demoraMs = 0;
+				if (espera > 0) await new Promise((listo) => setTimeout(listo, espera));
+				return esta;
 			}
 			case 'plugin:i18n|get_locale':
 				return idioma;
@@ -50,6 +60,11 @@ export function crearBackend() {
 
 	const listen = async (evento: string, manejador: (e: { payload: string }) => void) => {
 		contar(`listen:${evento}`);
+		if (fallaElListen) {
+			const e = fallaElListen;
+			fallaElListen = null;
+			throw e;
+		}
 		if (evento === 'i18n:locale_changed') {
 			avisar = (locale: string) => manejador({ payload: locale });
 		}
@@ -69,6 +84,18 @@ export function crearBackend() {
 		},
 		hacerFallar: (error: Error) => {
 			fallaLaProxima = error;
+		},
+		/** El próximo `listen` falla. */
+		hacerFallarElListen: (error: Error) => {
+			fallaElListen = error;
+		},
+		/** La próxima carga tarda esto en contestar. */
+		demorarLaProxima: (ms: number) => {
+			demoraMs = ms;
+		},
+		/** Lo que devolverán las cargas de acá en más. */
+		servirCatalogos: (nuevos: Record<string, Record<string, string>>) => {
+			catalogos = nuevos;
 		},
 		/** Como si alguien cambiara el idioma desde otra ventana. */
 		cambiarIdiomaDesdeAfuera: (locale: string) => avisar?.(locale),

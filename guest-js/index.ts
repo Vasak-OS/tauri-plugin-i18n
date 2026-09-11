@@ -38,8 +38,26 @@ export default class I18n {
    */
   private cargando: Promise<void> | null = null;
 
-  /** Si ya se escucha el cambio de idioma. Se escucha una vez, no una por carga. */
-  private escuchando = false;
+  /**
+   * La suscripción al cambio de idioma, en curso o hecha.
+   *
+   * Es una promesa y no un booleano a propósito. Con un booleano puesto antes de
+   * que `listen()` volviera, dos cargas a la vez registraban dos suscripciones —
+   * ninguna veía a la otra— y, peor, una que fallara quedaba marcada como hecha:
+   * de ahí en más nadie escuchaba el cambio de idioma y no había forma de
+   * reintentarlo. Guardando la promesa, la segunda carga espera a la primera y
+   * un fallo se olvida.
+   */
+  private suscripcion: Promise<UnlistenFn> | null = null;
+
+  /**
+   * Cuál es la carga vigente.
+   *
+   * Dos cargas encimadas —una que empezó y un `reload()` que llega antes de que
+   * termine— pueden volver en cualquier orden. Sin esto, la vieja terminando
+   * última pisaba los catálogos de la nueva con los de antes.
+   */
+  private generacion = 0;
 
   private static instance: I18n;
 
@@ -97,26 +115,54 @@ export default class I18n {
   }
 
   private async cargar(): Promise<void> {
+    const mia = ++this.generacion;
+
+    let catalogos: TranslationMap | null;
+    let idioma: string;
     try {
-      this.translations = await invoke<Record<string, Record<string, string>> | null>('plugin:i18n|load_translations');
-      this.locale = await invoke<string>('plugin:i18n|get_locale');
+      catalogos = await invoke<Record<string, Record<string, string>> | null>('plugin:i18n|load_translations');
+      idioma = await invoke<string>('plugin:i18n|get_locale');
+      await this.escucharCambioDeIdioma();
     } catch (error) {
       // Un fallo no puede dejar la carga marcada como hecha: sin esto, un
       // backend que no contestó una vez no se reintenta nunca y la aplicación
       // se queda con las claves crudas para siempre.
-      this.cargando = null;
+      //
+      // Se limpia sólo si la vigente sigue siendo ésta: si mientras tanto
+      // entró un `reload()`, `cargando` ya apunta a la carga nueva y borrarlo
+      // la dejaría huérfana.
+      if (mia === this.generacion) this.cargando = null;
       throw error;
     }
 
-    if (!this.escuchando) {
-      this.escuchando = true;
-      const unlisten = await listen<string>('i18n:locale_changed', (event) => {
-        this.aplicarIdioma(event.payload);
-      })
-      this.unlistenFns.push(unlisten)
+    // Lo de una carga vieja que termina tarde se descarta: manda la última que
+    // se pidió, no la última que contesta.
+    if (mia !== this.generacion) return;
+
+    this.translations = catalogos;
+    this.locale = idioma;
+    this.notificar();
+  }
+
+  /**
+   * Se suscribe al cambio de idioma, una sola vez y reintentable.
+   */
+  private async escucharCambioDeIdioma(): Promise<void> {
+    this.suscripcion ??= listen<string>('i18n:locale_changed', (event) => {
+      this.aplicarIdioma(event.payload);
+    });
+
+    let unlisten: UnlistenFn;
+    try {
+      unlisten = await this.suscripcion;
+    } catch (error) {
+      this.suscripcion = null;
+      throw error;
     }
 
-    this.notificar();
+    // Dos cargas encimadas esperan a la misma promesa y vuelven con la misma
+    // función: se guarda una vez, o `destroy()` la llamaría de más.
+    if (!this.unlistenFns.includes(unlisten)) this.unlistenFns.push(unlisten);
   }
 
   /** Deja el idioma puesto y avisa a todo el que mire. */
@@ -206,7 +252,7 @@ export default class I18n {
   destroy() {
     this.unlistenFns.forEach(unlisten => unlisten());
     this.unlistenFns = [];
-    this.escuchando = false;
+    this.suscripcion = null;
     // La carga también se olvida: si no, después de un `destroy()` la instancia
     // se cree cargada y nadie vuelve a suscribirse al cambio de idioma.
     this.cargando = null;
