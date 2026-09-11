@@ -65,3 +65,29 @@ describe('si falla suscribirse al cambio de idioma', () => {
 		expect(useI18n().locale.value).toBe('en');
 	});
 });
+
+describe('cambiar de idioma mientras una carga va y viene', () => {
+	beforeAll(() => {
+		I18n.getInstance().destroy();
+		backend.reiniciarCuentas();
+		backend.servirCatalogos({ es: { saludo: 'Hola' }, fr: { saludo: 'Salut' } });
+	});
+
+	test('la carga no deshace el idioma que se eligió mientras tanto', async () => {
+		// La carga lee el idioma **antes** de que lo cambien, y vuelve después. Sin
+		// la revisión, al escribir lo que leyó deshacía el `setLocale` — o sea que
+		// elegir idioma durante el arranque no tomaba efecto, y nada lo decía.
+		// La demora va en `get_locale`: toma el idioma de ahora —«es»— y contesta
+		// dentro de un rato, cuando ya es otro.
+		backend.demorarElProximoIdioma(60);
+		const cargando = I18n.getInstance().reload();
+
+		await new Promise((listo) => setTimeout(listo, 10));
+		await I18n.setLocale('fr');
+
+		await cargando;
+
+		expect(I18n.getInstance().currentLocale).toBe('fr');
+		expect(useI18n().t('saludo')).toBe('Salut');
+	});
+});

@@ -20,6 +20,8 @@ export function crearBackend() {
 	let fallaLaProxima: Error | null = null;
 	/** Lo que tarda `load_translations` en contestar, para encimar dos cargas. */
 	let demoraMs = 0;
+	/** Lo que tarda `get_locale`, para que conteste con el idioma de antes. */
+	let demoraIdiomaMs = 0;
 	/** Si está puesto, el próximo `listen` falla con esto. */
 	let fallaElListen: Error | null = null;
 	/** Qué catálogo devolver; se cambia para distinguir una carga de la otra. */
@@ -46,8 +48,16 @@ export function crearBackend() {
 				if (espera > 0) await new Promise((listo) => setTimeout(listo, espera));
 				return esta;
 			}
-			case 'plugin:i18n|get_locale':
-				return idioma;
+			case 'plugin:i18n|get_locale': {
+				// El valor se toma **antes** de la espera, como haría el backend de
+				// verdad: lo que vuelve es lo que había cuando se preguntó, no lo que
+				// hay cuando contesta. Es justo la diferencia que hace la carrera.
+				const esta = idioma;
+				const espera = demoraIdiomaMs;
+				demoraIdiomaMs = 0;
+				if (espera > 0) await new Promise((listo) => setTimeout(listo, espera));
+				return esta;
+			}
 			case 'plugin:i18n|set_locale':
 				idioma = args?.locale as string;
 				return null;
@@ -92,6 +102,10 @@ export function crearBackend() {
 		/** La próxima carga tarda esto en contestar. */
 		demorarLaProxima: (ms: number) => {
 			demoraMs = ms;
+		},
+		/** El próximo `get_locale` tarda esto, con el idioma ya tomado. */
+		demorarElProximoIdioma: (ms: number) => {
+			demoraIdiomaMs = ms;
 		},
 		/** Lo que devolverán las cargas de acá en más. */
 		servirCatalogos: (nuevos: Record<string, Record<string, string>>) => {

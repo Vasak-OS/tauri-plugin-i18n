@@ -59,6 +59,17 @@ export default class I18n {
    */
   private generacion = 0;
 
+  /**
+   * Cuántas veces cambió el idioma.
+   *
+   * Va aparte de `generacion` porque lo que hay que descartar es distinto. Si
+   * alguien llama a `setLocale('fr')` mientras una carga está en vuelo, esa
+   * carga vuelve con el idioma que leyó **antes** —el viejo— y al escribirlo
+   * deshacía el cambio. Pero sus catálogos sí sirven, así que no se puede tirar
+   * la carga entera: se tira sólo el idioma.
+   */
+  private revisionIdioma = 0;
+
   private static instance: I18n;
 
   private constructor() { } // private for singleton
@@ -116,6 +127,7 @@ export default class I18n {
 
   private async cargar(): Promise<void> {
     const mia = ++this.generacion;
+    const idiomaVistoAl = this.revisionIdioma;
 
     let catalogos: TranslationMap | null;
     let idioma: string;
@@ -140,7 +152,8 @@ export default class I18n {
     if (mia !== this.generacion) return;
 
     this.translations = catalogos;
-    this.locale = idioma;
+    // El idioma sólo si nadie lo cambió mientras esto iba y venía.
+    if (idiomaVistoAl === this.revisionIdioma) this.locale = idioma;
     this.notificar();
   }
 
@@ -168,6 +181,7 @@ export default class I18n {
   /** Deja el idioma puesto y avisa a todo el que mire. */
   private aplicarIdioma(locale: string) {
     if (this.locale === locale) return;
+    this.revisionIdioma += 1;
     this.locale = locale;
     this.updateAll();
     this.notificar();
