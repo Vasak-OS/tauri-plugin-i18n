@@ -1,343 +1,417 @@
-# Tauri Plugin i18n (A simple wrapper around rust_i18n)
+# Tauri plugin i18n
 
-this project is a one fork of [tauri-plugin-i18n](https://github.com/razein97/tauri-plugin-i18n)
+Internationalization for tauri apps. forked to upload cargo
 
-> This plugin does not support macros from rust_i18n.
+---
 
-> rust_i18n is only used for parsing the locales.
+## Tecnología
 
-![i18n usage](i18n_usage.gif)
+Uso: generate-readme-badges.sh <tipo>
 
-| Platform | Supported |
-| -------- | --------- |
-| Linux    | ✓         |
-| Windows  | ✓         |
-| macOS    | ✓         |
-| Android  | Untested  |
-| iOS      | Untested  |
+Tipos válidos:
+  tauri-vue       Apps Tauri + Vue 3 (Rust, Tauri, Vue 3, TypeScript)
+  rust-service    Servicios Rust systemd/D-Bus (Rust, systemd, D-Bus)
+  cpp-plugin      Plugins C++ Wayfire (C++, Meson, Wayfire)
+  meson-c         Módulos C WirePlumber (C, Meson, WirePlumber)
+  meson-cpp       Plugins C++ genéricos Meson (C++, Meson)
 
-## Install
+Ejemplos:
+  ./generate-readme-badges.sh tauri-vue
+  ./generate-readme-badges.sh rust-service > tech-badges.md
 
-_This plugin requires a Rust version of at least **1.77.2**_
+## Estado
 
-Install the Core plugin by adding the following to your `Cargo.toml` file:
+[![CI](https://github.com/Vasak-OS/tauri-plugin-i18n/actions/workflows/ci.yml/badge.svg)](https://github.com/Vasak-OS/tauri-plugin-i18n/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/github/v/release/Vasak-OS/tauri-plugin-i18n?style=flat&label=Versi%C3%B3n)](https://github.com/Vasak-OS/tauri-plugin-i18n/releases)
+[![Licencia](https://img.shields.io/github/license/Vasak-OS/tauri-plugin-i18n?style=flat)](LICENSE)
+[![Cobertura](https://sonarcloud.io/api/project_badges/measure?project=Vasak-OS_tauri-plugin-i18n&metric=coverage&style=flat)](https://sonarcloud.io/summary/new_code?id=Vasak-OS_tauri-plugin-i18n)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=Vasak-OS_tauri-plugin-i18n&metric=alert_status&style=flat)](https://sonarcloud.io/summary/new_code?id=Vasak-OS_tauri-plugin-i18n)
+[![Tamaño repo](https://img.shields.io/github/repo-size/Vasak-OS/tauri-plugin-i18n?style=flat)](https://github.com/Vasak-OS/tauri-plugin-i18n)
 
-`src-tauri/Cargo.toml`
+---
 
-```toml
-# Point this to your fork's repository and branch/tag/rev
-# Example using a GitHub repo:
-[dependencies.tauri-plugin-i18n-vsk]
-git = "https://github.com/VasakOS/tauri-plugin-i18n"
+## Descripción
 
-# Or use a local path if developing locally:
-# path = "../path/to/your/fork/tauri-plugin-i18n"
+Internationalization for tauri apps. forked to upload cargo
+
+**Para el usuario:** forked to upload cargo
+
+**Integración VasakOS:** Integra con el ecosistema VasakOS vía D-Bus y configuración compartida.
+
+---
+
+## Arquitectura (diagramas)
+
+> Copia y pega la plantilla que necesites, descomenta y adapta.
+
+### Flujo de datos
+
+```mermaid
+<!--
+graph TD
+    A[Entrada: Teclado / Ratón / D-Bus / Sistema] --> B[Procesamiento: Core Rust + Tauri Commands]
+    B --> C[Salida: UI actualizada / Acciones del sistema]
+    style A fill:#e1f5fe
+    style C fill:#e8f5e9
+-->
 ```
 
-The package can also be installed by using cargo:
+### Componentes internos
 
-```sh
-cargo add tauri-plugin-i18n-vsk
+```mermaid
+<!--
+flowchart LR
+    subgraph App[Tauri plugin i18n]
+        UI[Frontend Vue 3 + vue-libvasak]
+        Core[Core Rust: lógica principal]
+        IPC[Tauri Commands / Eventos]
+        System[Systemd / D-Bus / PipeWire / Wayland]
+    end
+    UI --> IPC
+    IPC --> Core
+    Core --> DBus[(D-Bus / zbus)]
+    Core --> System
+    style UI fill:#f3e5f5
+    style Core fill:#e3f2fd
+    style DBus fill:#fff3e0
+    style System fill:#fce4ec
+-->
 ```
 
-You can install the JavaScript Guest bindings using your preferred JavaScript package manager:
+### Integración en el sistema VasakOS
 
-Install the JavaScript bindings using your preferred package manager:
+```mermaid
+<!--
+C4Context
+    title Tauri plugin i18n en VasakOS
+    Person(usuario, "Usuario", "Persona que usa el sistema")
+    System_Boundary(c1, "VasakOS") {
+        System(app, "Tauri plugin i18n", "Internationalization for tauri apps. forked to upload cargo")
+        System_Ext(settings, "vasak-settings", "Configuración central")
+        System_Ext(keyring, "vasak-keyring", "Secrets y claves")
+        System_Ext(accounts, "vasak-accounts", "Cuentas e identidad")
+        System_Ext(permissions, "vasak-permissions", "Permisos y portales")
+    }
+    System_Ext(systemd, "systemd", "Gestión de servicios")
+    System_Ext(dbus, "D-Bus", "Bus de mensajes del sistema")
+    System_Ext(wayland, "Wayland / Wayfire", "Compositor")
+    System_Ext(pipewire, "PipeWire", "Multimedia")
+    Rel(usuario, app, "Usa")
+    Rel(app, settings, "Lee/escribe config")
+    Rel(app, keyring, "Guarda/lee secrets")
+    Rel(app, accounts, "Identidad de cuenta")
+    Rel(app, permissions, "Solicita permisos")
+    Rel(app, systemd, "Activación / sockets")
+    Rel(app, dbus, "Expone / consume interfaces")
+    Rel(app, wayland, "Superficies / protocolos")
+    Rel(app, pipewire, "Streams de audio/video")
+-->
+```
+
+---
+
+## Instalación
+
+### Arch Linux (repo oficial)
 
 ```bash
-# Using bun 
+pacman -S vasak-tauri-plugin-i18n
+```
+
+### Debian / Ubuntu (.deb)
+
+```bash
+wget https://github.com/Vasak-OS/tauri-plugin-i18n/releases/download/v{{VERSION}}/vasak-tauri-plugin-i18n_{{VERSION}}_amd64.deb
+sudo apt install ./vasak-tauri-plugin-i18n_{{VERSION}}_amd64.deb
+```
+
+### Desde fuente
+
+```bash
+git clone https://github.com/Vasak-OS/tauri-plugin-i18n.git
+cd tauri-plugin-i18n
+
+# Build Rust (plugin Tauri)
+cargo build --release --locked
+
+# Tests
+cargo test --locked
+
+# Publicar (crates.io + npm)
+cargo publish --locked
+npm publish
+```
+
+### Flatpak / AppImage
+
+> *Placeholder: añadir cuando exista paquete Flatpak o AppImage oficial.*
+
+## Uso desde npm
+
+Publicado como `@vasakgroup/tauri-plugin-i18n` en npm.
+
+### Instalación
+
+```bash
+# Con bun (recomendado)
 bun add @vasakgroup/tauri-plugin-i18n
 
-# Using pnpm
-pnpm add @vasakgroup/tauri-plugin-i18n
-
-# Using npm
+# Con npm
 npm install @vasakgroup/tauri-plugin-i18n
 
-# Using yarn
-yarn add @vasakgroup/tauri-plugin-i18n
+# Con pnpm
+pnpm add @vasakgroup/tauri-plugin-i18n
 ```
 
-## Locale file [rust_i18n implementation]
+### Uso básico
 
-You can use `_version` key to specify the version (This version is the locale file version, not the rust-i18n version) of the locale file, and the default value is `1`.
+```typescript
+import { tauri_plugin_i18n } from '@vasakgroup/tauri-plugin-i18n';
 
-rust-i18n supports two style of config file, and those versions will always be keeping.
+// Inicializar el plugin en tu app Tauri
+const plugin = tauri_plugin_i18n();
 
-- `_version: 1` - Split each locale into difference files, it is useful when your project wants to split to translate work.
-- `_version: 2` - Put all localized text into same file, it is easy to translate quickly by AI (e.g.: GitHub Copilot). When you write original text, just press Enter key, then AI will suggest you the translation text for other languages.
+// Usar las APIs expuestas
+// Ver documentación completa en: https://docs.vasakos.org/plugins/i18n
+```
 
-You can choose as you like.
+### Documentación completa
 
-### Split Localized Texts into Difference Files
+- **Referencia API:** [docs.vasakos.org/plugins/i18n](https://docs.vasakos.org/plugins/i18n)
+- **Changelog:** [GitHub Releases](https://github.com/Vasak-OS/tauri-plugin-i18n/releases)
+- **Ejemplos:** [vasak-apps](https://github.com/Vasak-OS/vasak-apps/tree/main/examples/i18n)
 
-> \_version: 1
+---
 
-You can also split the each language into difference files, and you can choose (YAML, JSON, TOML), for example: `en.json`:
+## Uso rápido
 
 ```bash
-.
-├── Cargo.lock
-├── Cargo.toml
-├── locales
-│   ├── zh-CN.yml
-│   ├── en.yml
-└── src
-│   └── main.rs
+# Se lanza automáticamente (systemd --user) o manualmente:
+tauri-plugin-i18n
 ```
 
-```yml
-_version: 1
-hello: 'Hello world'
-mello: 'Mello world'
+### Atajos / flags principales
+
+| Acción | Comando / Tecla |
+|--------|-----------------|
+| Acción principal | `tauri-plugin-i18n` |
+| Configuración | `tauri-plugin-i18n --config` |
+| Ayuda | `tauri-plugin-i18n --help` |
+
+> **Captura:** `assets/demo.gif` *(placeholder — sustituir por GIF real)*
+
+---
+
+## Configuración
+
+### Archivo de configuración
+
+```
+~/.config/vasak/tauri-plugin-i18n.toml
 ```
 
-Or use JSON or TOML format, just rename the file to `en.json` or `en.toml`, and the content is like this:
+### Variables de entorno
 
-```json
-{
-  "_version": 1,
-  "hello": "Hello world",
-  "mello": "Mello world"
-}
-```
+| Variable | Descripción | Por defecto |
+|----------|-------------|-------------|
+| `VASAK_DEBUG` | Activa logs de depuración en consola | `false` |
+| `VASAK_PROFILE` | Perfil de rendimiento: `balanced`, `performance`, `power-save` | `balanced` |
 
-```toml
-hello = "Hello world"
-mello = "Mello world"
-```
+### Integración con `tauri-plugin-config-manager`
 
-### All Localized Texts in One File
+- Esquemas de color: respeta `--ui-primary`, `--ui-surface`, `--ui-focus`, `--ui-on-surface`, `--ui-border`
+- Tema de iconos: usa el tema del sistema (`vasakos-icon-theme`) vía `vicon` lookup
+- Radio de bordes: variable CSS `--ui-radius` del esquema activo (por defecto 12px)
+- Fuentes: `--ui-font-family`, `--ui-font-size-base` desde el esquema
 
-> \_version: 2
+---
 
-Make sure all localized files (containing the localized mappings) are located in the `locales/` folder of the project root directory:
+## Desarrollo
+
+### Requisitos
+
+- **Rust:** `rustup` toolchain estable (`rust-toolchain.toml` fija la versión)
+- **Node / bun:** `bun` ≥ 1.1 (nunca npm/yarn/pnpm para apps Tauri)
+- **Sistema:** `pkg-config`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`
+- *`libssl-dev` para TLS, dependencias específicas del plugin*
+
+### Dependencias de desarrollo
+
+#### Sistema (paquetes Arch / Debian / Fedora)
+
+`base-devel`, `pkgconf`, `libssl-dev`, `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `gstreamer1.0-plugins-base`, `gstreamer1.0-plugins-good`, `libpipewire-0.3-dev`, `libwireplumber-0.5-dev`, `libdbus-1-dev`, `libudev-dev`, `libxkbcommon-dev`, `libwayland-dev`, `meson`, `ninja`, `clang`, `lld`
+
+#### Rust
+
+`rustup` → `stable` + `rustfmt` + `clippy`
+
+#### Node
+
+**Solo `bun`** (nunca npm/yarn/pnpm para apps Tauri). `bun --version` ≥ 1.1
+
+#### Herramientas CLI
+
+`just` (command runner), `cargo-binstall` (opcional), `cargo-llvm-cov` (para cobertura)
+
+### Correr la app en desarrollo
 
 ```bash
-.
-├── Cargo.lock
-├── Cargo.toml
-├── locales
-│   ├── app.yml
-│   ├── some-module.yml
-└── src
-│   └── main.rs
-└── sub_app
-│   └── locales
-│   │   └── app.yml
-│   └── src
-│   │   └── main.rs
-│   └── Cargo.toml
+# Frontend (Vite dev server + Tauri dev)
+bun run tauri dev
+
+# Solo frontend (Vite)
+bun run dev
+
+# Solo backend (cargo watch)
+cargo watch -x "run --bin tauri-plugin-i18n"
 ```
 
-In the localized files, specify the localization keys and their corresponding values, for example, in `app.yml`:
+### Compilar / Build de release
 
-```yml
-_version: 2
-hello:
-  en: Hello world
-  zh-CN: 你好世界
+```bash
+# Build completo (frontend + backend + bundle)
+bun run tauri build
+
+# Solo frontend (para testear bundle después)
+bun run build
+
+# Solo backend Rust (binario optimizado)
+cargo build --release --locked
+
+# Paquetes nativos
+# Arch: makepkg -sf en PKGBUILDS/tauri-plugin-i18n/
+# Debian: cargo deb --no-build --target-dir src-tauri/target/release/debian
 ```
 
-This is useful when you use [GitHub Copilot](https://github.com/features/copilot), after you write a first translated text, then Copilot will auto generate other locale's translations for you.
+### Targets principales
 
-<img src="https://user-images.githubusercontent.com/5518/262332592-7b6cf058-7ef4-4ec7-8dea-0aa3619ce6eb.gif" width="446" />
+```bash
+# Desarrollo (Tauri dev server + hot reload)
+bun run dev
 
-## Usage
+# Build producción
+bun run build
 
-First you need to register the core plugin with Tauri:
+# Solo frontend
+bun run build:frontend
 
-The init method takes two args:
+# Solo backend Rust
+cargo build --release --locked
 
-- The location of the locales dir
-- Default locale (eg: "en")
-
-<br/>
-
-`src-tauri/src/lib.rs`
-
-```rust
-fn main() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_i18n::init(None))
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
+# Lint + tipos (pre-commit / CI)
+bunx --bun biome check .
+bunx vue-tsc --noEmit
+cargo fmt --check
 ```
 
-Afterwards all the plugin's APIs are available through the JavaScript guest bindings and also via `tauri::AppHandle`:
+### Pruebas
 
-#### JS
+```bash
+# Tests Rust
+cargo test -p tauri-plugin-i18n --locked
 
-```javascript
-import I18n from '@vasakgroup/tauri-plugin-i18n';
-
-// Load translations
-await I18n.getInstance().load();
-
-// Example
-//Get available locales
-const locales = await I18n.getAvailableLocales();
-console.log('Locales:', locales);
+# Tests JS (si tiene bindings)
+bun test
 ```
 
-#### Rust
+### Convención de commits
 
-```rust
-#[tauri::command]
-fn get_locales(app: tauri::AppHandle)-> Vec<String> {
-  app.i18n().available_locales()
-}
+[Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/):
+
 ```
+<tipo>(<ámbito>): <descripción corta>
+
+[cuerpo opcional]
+
+[pie opcional: Closes #N]
+```
+
+Tipos habituales: `feat`, `fix`, `bugfix`, `docs`, `ci`, `chore`, `security`, `refactor`, `perf`, `test`.
+
+### Cómo abrir PR
+
+1. Rama desde `origin/main`:
+   ```bash
+   git worktree add -b feat/tema ~/wt/tauri-plugin-i18n-tema origin/main
+   ```
+2. Prefijos de rama: `fix/`, `feat/`, `bugfix/`, `docs/`, `ci/`, `chore/`, `security/`
+3. Escribe el fix → **`qa` escribe las pruebas** (fallan sin el fix) → suite verde → abre PR
+4. Al abrir PR, **cuatro cosas obligatorias**:
+   - Asignado a `JoaquinDecima`
+   - Etiqueta `enhancement` o `bug` (+ `ci` / `dependencies` si aplica)
+   - Añadido al proyecto «VasakOS Roadmap»
+   - Status **In Progress**
 
 ---
 
-### Updating the locale
+## Arquitectura (texto)
 
-#### JS
+### Crates / módulos principales
 
-```javascript
-import I18n from '@vasakgroup/tauri-plugin-i18n';
+| `tauri-plugin-i18n` | Plugin Tauri: Rust backend + JS bindings |
 
-// Example
-// Set the locale
-await I18n.setLocale('en');
-```
+### Interfaces D-Bus / zbus expuestas
 
-#### Rust
+| `org.vasak.i18n` | Métodos específicos del plugin | Funcionalidad expuesta a apps Tauri |
 
-```rust
-#[tauri::command]
-fn update_locale(app: tauri::AppHandle, locale: &str) {
-  app.i18n().set_locale(locale);
-}
-```
+### Puntos de extensión
 
----
+- **Plugins:** Sistema de plugins modular
+- **Hooks:** Hooks de ciclo de vida
+- **API pública Rust:** API pública del crate principal
 
-### Using the locale
+### Features / Cargo features
 
-**Note: The i18n class must be instantiated in order to translate in javascript.**
+| Feature | Descripción | Default |
+|---------|-------------|---------|
+| `async` | API asíncrona (futures) | ✓ |
+| `blocking` | API bloqueante para compatibilidad | |
 
-#### JS
-
-```javascript
-// In javascript, it uses the [data-i18n] attribute to remain framework agnostic
-
-import I18n from '@vasakgroup/tauri-plugin-i18n';
-
-// Load translations
-await I18n.getInstance().load();
-
-// Example
-// Use a translation
-<p data-i18n="hello"> </p>;
-```
-
-#### Rust
-
-```rust
-  let translated: Option<&str> = app.i18n().translate("hello");
-```
-
-**Call the destroy method in javascript when done to cleanup.**
-
-> See the examples folder for a working app.
+Y para apps Tauri+Vue: features del `tauri.conf.json` → `bundle` / `plugins` / `allowlist` (capabilities).
 
 ---
 
-### Vue: `useI18n()`
+## Pruebas y calidad
 
-The composable reads the **same** state as the `I18n` class — it does not keep a
-copy. Loading through either one fills both, so the recommended startup is to
-load once before mounting and let every component just read:
+- **Cobertura objetivo:** ≥ 80 % del código nuevo (SonarCloud Quality Gate)
+- **Informes:** GitHub Actions → pestaña *SonarCloud Code Analysis* → enlace a SonarCloud
+- **Añadir pruebas:** ver `AGENTS.md` sección 9 (mapa de repos y comandos de prueba)
+- **Regla:** toda corrección lleva prueba escrita por `qa` que falla sin el fix
 
-```javascript
-// main.ts
-import I18n from '@vasakgroup/tauri-plugin-i18n';
+---
 
-// One load for the whole app. Every `useI18n()` below sees it already done.
-await I18n.getInstance().load();
+## Contribuir
 
-app.mount('#app');
-```
+- **Guía:** [.github/CONTRIBUTING.md](https://github.com/Vasak-OS/.github/blob/main/CONTRIBUTING.md)
+- **Plantillas de issue:** [.github/ISSUE_TEMPLATE/](https://github.com/Vasak-OS/.github/tree/main/ISSUE_TEMPLATE)
+- **Código de conducta:** [CODE_OF_CONDUCT.md](https://github.com/Vasak-OS/.github/blob/main/CODE_OF_CONDUCT.md)
 
-```vue
-<script setup>
-import { useI18n } from '@vasakgroup/tauri-plugin-i18n'
+---
 
-const { t, locale, setLocale, availableLocales, isLoaded, reload } = useI18n()
-</script>
+## Contribuidores
 
-<template>
-  <p>{{ t('views.home.title') }}</p>
-</template>
-```
+> **Actualizado automáticamente en CI** — muestra los avatares de quienes han aportado código a este repo.
 
-`load()` is safe to call from anywhere and as often as you like: the first call
-does the work and the rest await that same one. If a component mounts before
-anything loaded, its `onMounted` loads for everyone. Use `reload()` only to
-re-read the catalogs after the files on disk changed.
+<div align="center">
+  <a href="https://github.com/JoaquinDecima" target="_blank"><img src="https://avatars.githubusercontent.com/u/11674229?v=4&s=40" width="40" height="40" alt="JoaquinDecima" style="border-radius: 50%; margin: 2px;" title="JoaquinDecima (48 contribuciones)"></a><a href="https://github.com/razein97" target="_blank"><img src="https://avatars.githubusercontent.com/u/27754873?v=4&s=40" width="40" height="40" alt="razein97" style="border-radius: 50%; margin: 2px;" title="razein97 (10 contribuciones)"></a><a href="https://github.com/dependabot[bot]" target="_blank"><img src="https://avatars.githubusercontent.com/in/29110?v=4&s=40" width="40" height="40" alt="dependabot[bot]" style="border-radius: 50%; margin: 2px;" title="dependabot[bot] (2 contribuciones)"></a>
+</div>
 
-> Before **2.3.0** the composable kept its own state, so `await
-> I18n.getInstance().load()` before mounting did not give the components
-> anything: the window showed raw keys (`views.home.title`) until each component
-> loaded again on its own. Upgrading fixes that without any change in the app.
+[Ver todos los contribuidores](https://github.com/Vasak-OS/tauri-plugin-i18n/graphs/contributors)
 
-#### Watching the state from outside Vue
+---
 
-```javascript
-const i18n = I18n.getInstance();
+## Donadores / Sponsors
 
-const unsubscribe = i18n.subscribe(() => {
-  console.log(i18n.currentLocale, i18n.catalogs);
-});
-```
+[![Sponsors](https://img.shields.io/github/sponsors/Vasak-OS?style=flat&label=Sponsors)](https://github.com/sponsors/Vasak-OS)
 
-`subscribe()` fires when the catalogs or the locale change and returns the
-function to unsubscribe. `catalogs` and `currentLocale` read the state at any
-moment, which is what lets a late subscriber catch up.
+> **Backers:** *Actualizado automáticamente en CI desde GitHub Sponsors / OpenCollective / Polar.*
 
-## Companion package
+[💖 Donar al proyecto](https://github.com/sponsors/Vasak-OS)
 
-Use package [rust-i18n-autotranslate](https://crates.io/crates/rust-i18n-autotranslate) to autotranslate locales from a source locale.
+---
 
-_Use `.taurignore` to prevent looping while running build._
+## Licencia
 
-_This is because tauri tracks all files in the project unless explicitly ignored._
+`GPL-3.0` — Copyright © 2026 **Vasak-OS Contributors**
 
-**It can be used both at compile time and runtime**
-
-### Compile time
-
-```rust
-  //build.rs
-
-  use rust_i18n_autotranslate::{
-    TranslationAPI,
-    config::{Config, TranslationProvider},
-};
-
-
-  fn main() {
-
-    //run translations
-    let target_locales = [
-        "es", "zh-CN", "zh-TW", "hi", "ar", "fr", "pt-BR", "de", "ru", "ja", "ko", "it", "tr",
-        "id", "vi",
-    ];
-
-    let cfg = Config::new()
-        .locales_directory("./locales")
-        .source_lang("en")
-        .add_target_langs(target_locales.to_vec())
-        .use_cache(true)
-        .translation_provider(TranslationProvider::DEEPL)
-        .build();
-
-    TranslationAPI::translate(cfg).unwrap();
-
-    tauri_build::build();
-}
-
-```
+[Ver licencia completa](LICENSE)
